@@ -1,0 +1,10 @@
+${ansible_host}
+
+[web]
+${ansible_host}
+
+# All Servers
+
+
+[base:children]
+web

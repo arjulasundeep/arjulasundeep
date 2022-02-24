@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: jenkins
+  namespace: jenkins
+  labels:
+    app: jenkins
+spec:
+  rules:
+   - host: JENKINS_DNS_ENTRY 
+     http:
+      paths:
+      - path: /
+        backend:
+          serviceName: jenkins
+          servicePort: 8080
+  tls:
+    - hosts:
+      - JENKINS_DNS_ENTRY 
+      secretName: TLS_CERT_SECRETNAME

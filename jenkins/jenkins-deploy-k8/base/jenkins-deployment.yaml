@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+  namespace: jenkins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+      - name: jenkins
+        image: simeio.jfrog.io/docker/simeio-jenkins:VERSIONTAG 
+        imagePullPolicy: Always
+        ports:
+           - name: jenkins-master
+             containerPort: 8080
+           - name: jenkins-slave
+             containerPort: 50000
+        volumeMounts:
+          - name: docker-sock
+            mountPath: /var/run
+          - name: nfs
+            mountPath: /var/jenkins_home
+        envFrom:
+        - configMapRef:
+            name: jenkins-configmap
+        - secretRef:
+            name: jenkins-secrets 
+# Secret to pull image from docker registry
+#      imagePullSecrets:
+#        - name: SECRETNAME
+      volumes:
+        - name: docker-sock
+          hostPath:
+            path: /var/run
+        - name: nfs
+          persistentVolumeClaim:
+            claimName: jenkinspvc

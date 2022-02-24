@@ -1,0 +1,13 @@
+---
+# handlers file for microservices
+- name: restart discovery service
+  service: name=discovery state=started
+
+- name: restart database service
+  service: name=database state=started
+
+- name: restart mfa service
+  service: name=mfa state=started
+
+- name: restart audit service
+  service: name=audit state=started

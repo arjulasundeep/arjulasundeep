@@ -1,0 +1,21 @@
+pipeline {
+    agent any
+    stages {
+        stage('git') {
+            steps {
+                git branch: 'develop', credentialsId: 'simeio-jenkins', url: 'https://bitbucket.org/simeioio/aws.git'
+            }
+        }
+        stage('cloud') {
+            steps {
+                sh '''
+                     export $(cat inventories/staging/group_vars/vars)
+                     vars='${DB_name}:${DB_user}:${DB_password}:${DB_schema}:${DB_schema_audit}:${DB_region}:${DB_size}:${DB_type}:${DB_engine}:${DB_subnet}:${DB_version}:${DB_port}:${DB_vpc_security_groups}:${DB_zone}:${DNS_zone}:${DNS_host_id}:${DNS_record}:${DNS_type}:${DNS_value}:${ansible_host}'
+                     echo $VARS
+                     echo ${ansible_host}
+                     ansible-playbook aws.yml
+                '''
+            }
+        }
+    }
+}

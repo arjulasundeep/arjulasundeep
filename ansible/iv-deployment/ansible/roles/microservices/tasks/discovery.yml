@@ -1,0 +1,14 @@
+---
+#tasks file for Discovery
+- name: Copy discovery service file
+  template:
+    src: discovery.service
+    dest: /etc/systemd/system/discovery.service
+  when: ansible_service_mgr == "systemd"
+
+- name: Start discovery
+  service:
+    daemon_reload: yes
+    name: discovery
+    state: started
+  when: ansible_service_mgr == "systemd"

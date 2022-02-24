@@ -1,0 +1,14 @@
+---
+
+tomcat_ver: 9.0.37
+
+JAVA_HOME: /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-1.amzn2.0.1.x86_64
+
+IV_HOME: /home/ivuser/identity-vault
+JAVA_OPTS: "-Dspring.config.location=CLASSPATH:/,file:${IV_HOME}/conf/application-iv.properties,Dlogging.config=file:${IV_HOME}/conf/log4j2-spring.xml -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true"
+CATALINA_OPTS: "-agentlib:jdwp=transport=dt_socket,address=8777,server=y,suspend=n"
+SIOS_HOME: /home/ivuser/microservices
+
+archive_url: https://archive.apache.org/dist/tomcat/tomcat-9/v{{ tomcat_ver }}/bin/apache-tomcat-{{ tomcat_ver }}.tar.gz
+archive_dest: /tmp/apache-tomcat-{{ tomcat_ver }}.tar.gz
+

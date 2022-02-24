@@ -1,0 +1,93 @@
+def  dockergitrepo = 'jenkins-docker'
+
+pipeline{
+    
+    environment {
+        imagename = "docker/simeio-jenkins"
+        dockergitrepo = 'jenkins-docker'
+	    registryCredential = 'jenkins-jfrog'
+        dockerImage = ''
+	
+    }
+    
+    agent { 
+      kubernetes {
+            defaultContainer 'docker'
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    buildType: docker
+spec:
+  containers:
+  - name: docker
+    image: simeio.jfrog.io/docker/docker:20.10.10-dind
+    imagePullPolicy: Always
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - name: docker-sock-volume
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: docker-sock-volume
+    hostPath:
+      path: /var/run/docker.sock
+  imagePullSecrets:
+    - name: regcred
+"""
+        }
+    }
+
+    triggers{
+        bitbucketPush overrideUrl: 'https://bitbucket.org/simeioio/' + dockergitrepo + '.git'
+    }
+    
+    stages {
+        stage('Build Repository Checkout') {
+            steps{
+                // Check out the build repository
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', url: 'https://bitbucket.org/simeioio/' + dockergitrepo + '.git']]])
+            }
+        }
+        
+        stage ('Set Build Version Environment Variable') {       
+           steps {
+                // Set the build version environment variable
+                script{
+	            // Obtain the version from the version.txt file
+                      env.BLDVER = sh(script: 'cat version.txt', returnStdout: true).trim()               
+                }
+                
+                // Print the determine build version
+                sh 'echo Building version $BLDVER'
+            }
+        }
+        
+        stage ("Building Docker Image") {
+            steps {
+                // Run the docker build using installed utilities
+                script {
+                    // Need to build image via sh to overcome DNS DIND issue
+                    sh ("docker build --network=host -t " + imagename + " .")
+                    // Keep the plugin-based build command so push executes
+                    // Since the identical layers exist already, this will skip over quickly will little compute
+                    dockerImage = docker.build imagename
+                }
+            }
+        }
+            
+        stage ("Push Docker Image to Registry") {
+            steps {
+                script {
+                    docker.withRegistry('http://simeio.jfrog.io/artifactory', registryCredential) {
+                    dockerImage.push('$BLDVER')
+                    dockerImage.push('latest')
+                    }
+                }
+            }
+        }
+    }
+}
+

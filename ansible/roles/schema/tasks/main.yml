@@ -1,0 +1,29 @@
+---
+- name: Running SQL scripts in DB
+  template:
+    src: "{{ item }}"
+    dest: /opt
+  with_items:
+    - MySQL-DDL.sql
+    - MySQL-DML.sql
+    - MySQL-Audit-DDL.sql
+    - DefaultAccountAndRoleCreation_DML.sql
+    - MySQL-TEST-DATA-ONLY-DML.sql
+    - script.sh
+
+- name: Creating Databases
+  shell:
+    cmd: bash /opt/script.sh
+
+- name: Removing
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /opt/MySQL-DDL.sql
+    - /opt/MySQL-DML.sql
+    - /opt/MySQL-Audit-DDL.sql
+    - /opt/DefaultAccountAndRoleCreation_DML.sql
+    - /opt/MySQL-TEST-DATA-ONLY-DML.sql
+    - /opt/script.sh
+

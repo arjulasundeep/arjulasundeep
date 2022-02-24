@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins
+  namespace: jenkins
+spec:
+  template:
+    metadata:
+      labels:
+        app: jenkins
+    spec:
+      containers:
+      - name: jenkins
+# Replace VERSIONTAG in the following with the desired Jenkins container version
+        image: simeio.jfrog.io/docker/simeio-jenkins:VERSIONTAG
+# Define the docker secret containing credentials to access the private docker repository
+      imagePullSecrets:
+        - name: regcred

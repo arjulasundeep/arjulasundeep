@@ -1,0 +1,14 @@
+---
+#tasks file for database
+- name: Copy database service file
+  template:
+    src: database.service
+    dest: /etc/systemd/system/database.service
+  when: ansible_service_mgr == "systemd"
+  
+- name: Start database
+  service:
+    daemon_reload: yes
+    name: database
+    state: started
+  when: ansible_service_mgr == "systemd"

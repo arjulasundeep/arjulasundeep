@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Properties>
+        <Property name="LOG_LEVEL">{{ auditing_log_level }}</Property>
+        <Property name="BASE_DIR">net.simeio.iv.auditing</Property>
+        <Property name="LOG_FILE_NAME_PREFIX">auditingservice</Property>
+
+        <Property name="LOG_SIZE">100 MB</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} : %p : %c{1} : %m%n%ex</Property>
+        <Property name="CONSOLE_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} : %p : %c{7} : %m%n%ex</Property>
+        <Property name="FILE_PATTERN">%d{yyyy-MM-dd-hh-mm}</Property>
+        <Property name="LOG_DIR">${env:SIOS_HOME}/logs</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console-Appender" target="SYSTEM_OUT">
+            <PatternLayout pattern="${CONSOLE_PATTERN}"/>
+        </Console>
+        <RollingFile name="App-File-Appender" fileName="${LOG_DIR}/${LOG_FILE_NAME_PREFIX}.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <FilePattern>${LOG_DIR}/${LOG_FILE_NAME_PREFIX}.log-${FILE_PATTERN}.log</FilePattern>
+            <SizeBasedTriggeringPolicy size="${LOG_SIZE}"/>
+            <DefaultRolloverStrategy max="20">
+                <Delete basePath="${LOG_DIR}" maxDepth="2">
+                    <IfFileName glob="*/${LOG_FILE_NAME_PREFIX}.log-*.log"/>
+                    <IfLastModified age="7d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+        <RollingFile name="SpringBoot-File-Appender" fileName="${LOG_DIR}/spring_${LOG_FILE_NAME_PREFIX}.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <FilePattern>${LOG_DIR}/springboot${LOG_FILE_NAME_PREFIX}_log.log-${FILE_PATTERN}.log</FilePattern>
+            <SizeBasedTriggeringPolicy size="${LOG_SIZE}"/>
+            <DefaultRolloverStrategy max="20">
+                <Delete basePath="${LOG_DIR}" maxDepth="2">
+                    <IfFileName glob="*/springboot${LOG_FILE_NAME_PREFIX}_log.log-*.log"/>
+                    <IfLastModified age="7d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.springframework" level="${LOG_LEVEL}" additivity="false">
+            <AppenderRef ref="SpringBoot-File-Appender"/>
+            <AppenderRef ref="Console-Appender"/>
+        </Logger>
+        <Logger name="com.zaxxer.hikari" level="${LOG_LEVEL}" additivity="false">
+            <AppenderRef ref="SpringBoot-File-Appender"/>
+            <AppenderRef ref="Console-Appender"/>
+        </Logger>
+        <Logger name="net.simeio.iv.mfa" level="${LOG_LEVEL}" additivity="false">
+            <AppenderRef ref="App-File-Appender"/>
+            <AppenderRef ref="Console-Appender"/>
+        </Logger>
+        <Root level="trace">
+            <AppenderRef ref="App-File-Appender"/>
+            <AppenderRef ref="Console-Appender"/>
+        </Root>
+    </Loggers>
+</Configuration>

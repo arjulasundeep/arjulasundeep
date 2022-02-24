@@ -1,0 +1,103 @@
+---
+- name: Add ivuser group
+  group:
+    name: ivuser
+    state: present
+
+- name: Add "ivuser" user
+  user:
+    name: ivuser
+    group: ivuser
+    home: /home/ivuser/
+    createhome: yes
+    system: yes
+    state: present
+  ignore_errors: yes
+
+- name: creating directories
+  file: 
+    path: /home/ivuser/{{item.0}}/{{item.1}} 
+    state: directory
+  with_nested:
+    - ['identity-vault']
+    - ['bin','conf','certs','lib','iv-logs']
+    
+- name: Adding the path in the bashrc files
+  lineinfile:
+    dest: /opt/tomcat/bin/catalina.sh
+    line: "{{ item }}"
+    insertafter: 'EOF'
+    regexp: "{{ 'item' }}"
+    state: present
+  with_items:
+    - 'export IV_HOME=/home/ivuser/identity-vault'
+    - 'JAVA_OPTS="-Dspring.config.location=CLASSPATH:/,file:${IV_HOME}/conf/application-iv.properties,Dlogging.config=file:${IV_HOME}/conf/log4j2-spring.xml -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true" '
+    - 'CATALINA_OPTS="-agentlib:jdwp=transport=dt_socket,address=8777,server=y,suspend=n" '
+    - 'JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-1.amzn2.0.1.x86_64" '
+
+- name: Adding the path in the bashrc files
+  lineinfile:
+    dest: /root/.bashrc
+    line: "{{ item }}"
+    insertafter: 'EOF'
+    regexp: "{{ 'item' }}"
+    state: present
+  with_items:
+    - 'export IV_HOME=/home/ivuser/identity-vault'
+    - 'JAVA_OPTS="-Dspring.config.location=CLASSPATH:/,file:${IV_HOME}/conf/application.properties,Dlogging.config=file:${IV_HOME}/conf/log4j2-spring.xml -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true" '
+    - 'CATALINA_OPTS="-agentlib:jdwp=transport=dt_socket,address=8777,server=y,suspend=n" '
+    - 'JAVA_HOME="/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.262.b10-0.el7_8.x86_64" '
+
+- name: Source the bashrc file
+  shell: source /root/.bashrc
+
+- name: Create symlinks
+  file:
+    src: /opt/tomcat/{{ item.src_name }}
+    dest: /home/ivuser/identity-vault/{{ item.dest_name }}
+    state: link
+  with_items:
+    - { src_name: "bin/startup.sh", dest_name: "bin/start-identity-vault" }
+    - { src_name: "bin/shutdown.sh", dest_name: "bin/stop-identity-vault" }
+    - { src_name: "logs", dest_name: "logs" }
+    - { src_name: "webapps", dest_name: "webapps" }
+
+- name: Adding files
+  template:
+    src: "{{ item }}"
+    dest: /home/ivuser/identity-vault/conf
+  with_items:
+    - application-iv.properties
+    - hazelcast.xml
+    - log4j2-spring.xml
+
+- name: deploying war file
+  copy:
+    src: iv.war
+    dest: /opt/tomcat/webapps/
+
+- name: deploying war file
+  copy:
+    src: hazelcast-mancenter.war
+    dest: /opt/tomcat/webapps/
+    
+- name: permissions
+  file:
+    path: /home/ivuser/identity-vault
+    owner: ivuser
+    group: ivuser
+    mode: 0755
+    state: directory
+    recurse: 
+    
+- name: Adding files
+  template:
+    src: hazelcast.xml
+    dest: /home/ivuser/identity-vault/webapps/iv/WEB-INF/classes
+
+- name: shell script
+  become: yes
+  become_user: ivuser
+  shell: /home/ivuser/identity-vault/bin/start-identity-vault
+
+

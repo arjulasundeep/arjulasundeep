@@ -1,0 +1,8 @@
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+
+resources:
+  - io-enterprise-configmap.yaml
+  - io-enterprise-deployment.yaml
+  - io-enterprise-ingress.yaml
+  - io-enterprise-hpa.yaml

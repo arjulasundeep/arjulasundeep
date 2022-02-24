@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: io-enterprise
+  namespace: ${IO_ENTERPRISE_NAMESPACE}
+  labels:
+    app: io-enterprise
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      #configure surge depending on what surge infrastructure can handle
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: io-enterprise
+  template:
+    metadata:
+      labels:
+        app: io-enterprise
+    spec:
+      containers:
+        - name: io-enterprise
+          image: simeio.jfrog.io/docker/io-enterprise-docker:${VERSIONTAG}
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+            requests:
+              cpu: "1"
+              memory: 1Gi
+          ports:
+          - containerPort: 8080
+          volumeMounts:
+          - name: ioenterprise
+            mountPath: /opt/tomcat/SIO_HOME/conf/jdbc.properties
+            subPath: jdbc.properties
+          - name: ioenterprise
+            mountPath: /opt/tomcat/SIO_HOME/conf/quartz.properties
+            subPath: quartz.properties
+          - name: zoneinfo
+            mountPath: /etc/localtime
+            subPath: UTC
+            readOnly: true
+          # readiness is important during a rolling update.
+          livenessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            httpGet:
+              path: /sioui/app/index.html
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            initialDelaySeconds: 35
+      volumes:
+        - name: ioenterprise
+          configMap:
+            name: ioenterprise
+            optional: true
+        - name: zoneinfo
+          hostPath:
+            path: /usr/share/zoneinfo
+      imagePullSecrets:
+        - name: regcred
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: io-enterprise
+  labels:
+    app: io-enterprise
+  namespace: ${IO_ENTERPRISE_NAMESPACE}
+spec:
+  selector:
+    app: io-enterprise
+  type: NodePort
+  ports:
+    - name: io-enterprise
+      port: 8080

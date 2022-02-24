@@ -1,0 +1,12 @@
+---
+- name: add dns
+  route53:
+    state: present
+    zone: $(DNS_zone)
+    hosted_zone_id: $(DNS_host_id)
+    record: "{{ item }}"
+    type: $(DNS_type)
+    ttl: 300
+    value: $(DNS_value)
+    wait: yes
+  with_items: "{{ $(DNS_record) }}"

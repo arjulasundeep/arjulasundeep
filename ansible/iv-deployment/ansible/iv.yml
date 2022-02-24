@@ -1,0 +1,11 @@
+---
+- hosts: web
+  become: yes
+  roles:
+#    - { role: tomcat}
+    - { role: db}
+#    - { role: iv}
+#    - { role: microservices}    
+  vars_files:
+    - "{{vault_folder}}"
+    - inventories/common/all

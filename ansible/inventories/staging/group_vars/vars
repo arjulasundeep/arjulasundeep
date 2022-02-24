@@ -1,0 +1,29 @@
+# schema variables
+DB_name={{DB_name}}
+# this is value of db instance in AWS
+DB_user={{DB_user}}
+DB_password={{DB_password}}
+DB_schema={{DB_schema}}
+DB_schema_audit={{DB_schema}}_audit
+DB_port={{DB_port}}
+
+#rds variables
+DB_region={{DB_region}}
+DB_size={{DB_size}}
+DB_type={{DB_type}}
+DB_engine={{DB_engine}}
+DB_subnet={{DB_subnet}}
+DB_version={{DB_version}}
+DB_vpc_security_groups={{DB_vpc_security_groups}}
+DB_zone={{DB_zone}}
+#zone should be under same region
+
+#DNS variables
+DNS_zone={{DNS_zone}}
+DNS_host_id={{DNS_host_id}}
+DNS_record={{DNS_record}}
+# pattern for multiple records  ['abc.simeio.io', 'xyz.simeio.io', ...]
+DNS_type={{DNS_type}}
+DNS_value={{DNS_value}}
+
+ansible_host={{ansible_host}}

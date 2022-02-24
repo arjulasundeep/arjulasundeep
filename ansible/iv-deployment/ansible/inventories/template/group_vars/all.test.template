@@ -1,0 +1,44 @@
+vault_folder: inventories/{{env}}/group_vars/pswd.vault
+iv_schema: ciam_{{ customer.short_name|replace("-","_") }}_{{env}}
+auditing_schema: ciam_audit_{{ customer.short_name|replace("-","_") }}_{{env}}
+
+iv_jdbc_url: jdbc:mysql://{{ io_db_host.value }}:{{ io_db_port.value }}/{{ iv_schema }}?useSSL=false&allowPublicKeyRetrieval=true
+audit_jdbc_url: jdbc:mysql://{{ io_db_host.value }}:{{ io_db_port.value }}/{{ auditing_schema }}?useSSL=false&allowPublicKeyRetrieval=true
+database_jdbc_url: jdbc:mysql://{{ io_db_host.value }}:{{ io_db_port.value }}/{{ iv_schema }}?useSSL=false&allowPublicKeyRetrieval=true
+DB_host: {{ io_db_host.value }}
+DB_port: {{ io_db_port.value }}
+
+#IV Service Settings
+iv_email_sender: {{ iv_email_sender }}
+iv_email_host: {{ iv_email_host }}
+iv_email_port: {{ iv_email_port }}
+iv_email_smtp_auth: {{ iv_email_smtp_auth }}
+iv_email_TLS_enable: {{ iv_email_TLS_enable }}
+iv_base_url: {{ iv_base_url }}
+iv_client_registry_cert_location: {{ iv_client_registry_cert_location }}
+
+
+#MFA Microservices Settings
+mfa_auth_url: {{ mfa_auth_url }}
+mfa_notificationconfig: {{ mfa_notificationconfig }}
+mfa_config_url: {{ mfa_config_url }}
+mfa_confidence: {{ mfa_confidence }}
+mfa_issuer: {{ mfa_issuer }}
+mfa_pushcallback_url: {{ mfa_pushcallback_url }}
+mfa_ping_url: https://ciam-ldap-{{customer.short_name}}-{{env}}.{{customer.dns_name}}/
+mfa_ping_userpath: directory/v1/uid={username},{{ base_dn }}
+mfa_iv_url: {{ mfa_iv_url }}
+ping_federate_url: https://ciam-login-{{customer.short_name}}-{{env}}.{{customer.dns_name}}/
+
+user_dn : {{ base_dn }}
+
+#Log Levels
+iv_log_level: {{ log_level }}
+mfa_log_level: {{ log_level }}
+discovery_log_level: {{ log_level }}
+database_log_level: {{ log_level }}
+auditing_log_level: {{ log_level }}
+
+
+memberlist1: {{ io_app_host_test.value }}
+memberlist2: {{ io_app_host_test.value }}

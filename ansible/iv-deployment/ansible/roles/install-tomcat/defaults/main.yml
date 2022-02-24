@@ -1,0 +1,34 @@
+#Default variables
+# These can be overridden in the parent playbook
+
+software_local_folder: /opt/software
+software_remote_folder: /opt/software
+tomcat_owner: fruser
+
+tomcat_version: 8.5.40
+tomcat_filename: apache-tomcat-{{ tomcat_version }}.tar.gz
+
+
+dir_tomcat: /opt
+tomcat_instance: forgerock
+tomcat_instance_dir: "{{dir_tomcat}}/{{tomcat_instance}}"
+tomcat_servicename: forgerock
+
+
+tomcat_base_port: 8000
+tomcat_admin_port: "{{ tomcat_base_port + 5}}"
+tomcat_http_port: "{{ tomcat_base_port + 80}}"
+tomcat_https_port: "{{ tomcat_base_port + 443}}"
+tomcat_ajp_port: "{{ tomcat_base_port + 9}}"
+
+
+user_tomcat_adminname: admin
+pswd_tomcat_admin: test1234
+
+tomcat_download_url: http://archive.apache.org/dist/tomcat//tomcat-8/v{{ tomcat_version }}/bin/{{ tomcat_filename }}
+#tomcat_download_url: http://mirror.its.dal.ca/apache/tomcat/tomcat-8/v{{ tomcat_version }}/bin/{{ tomcat_archive }}
+
+tomcat_keystore_location: "{{tomcat_instance_dir}}/apache-tomcat-{{ tomcat_version }}/conf/keystore.jks"
+tomcat_keystore_pswd: changeit
+cert_tomcat_validity: 3650
+keystore_tomcat_keysize: 1024

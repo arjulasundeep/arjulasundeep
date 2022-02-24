@@ -1,0 +1,29 @@
+---
+
+- rds:
+    command: create
+    instance_name: $(DB_name)
+    region: $(DB_region)
+    size: $(DB_size)
+    instance_type: $(DB_type)
+    db_engine: $(DB_engine)
+    subnet: $(DB_subnet)
+    engine_version: $(DB_version)
+    multi_zone: no
+    port: $(DB_port)
+    db_name: $(DB_schema)
+    username: $(DB_user)
+    password: $(DB_password)
+    vpc_security_groups: $(DB_vpc_security_groups)
+    publicly_accessible: no
+    zone: $(DB_zone)
+    wait: yes
+    wait_timeout: 1800
+    tags:
+      Environment: testing
+      Application: cms
+  register: launched_rds
+  tags: launch_rds
+
+- debug: var=item
+  with_items: launched_rds.instance

@@ -1,0 +1,8 @@
+resources:
+  - jenkins-namespace.yaml
+  - jenkins-service-account-k8.yaml
+  - jenkins-configmap.yaml
+  - jenkins-persistent-volume.yaml
+  - jenkins-deployment.yaml
+  - jenkins-service.yaml
+  - jenkins-ingress.yaml

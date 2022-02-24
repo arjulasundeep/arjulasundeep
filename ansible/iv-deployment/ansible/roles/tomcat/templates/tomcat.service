@@ -1,0 +1,22 @@
+[Unit]
+Description=Tomcat
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+User=ivuser
+Group=ivuser
+
+Environment=JAVA_HOME={{ JAVA_HOME }}
+Environment='JAVA_OPTS="-Dspring.config.location=CLASSPATH:/,file:${IV_HOME}/conf/application-iv.properties,-Dlogging.config=file:${IV_HOME}/conf/log4j2-spring.xml"'
+
+Environment=CATALINA_HOME=/opt/tomcat
+Environment=CATALINA_BASE=/opt/tomcat
+Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid
+Environment=CATALINA_OPTS="-agentlib:jdwp=transport=dt_socket,address=8777,server=y,suspend=n"
+ExecStart=/opt/tomcat/bin/catalina.sh start
+ExecStop=/opt/tomcat/bin/catalina.sh stop
+
+[Install]
+WantedBy=multi-user.target

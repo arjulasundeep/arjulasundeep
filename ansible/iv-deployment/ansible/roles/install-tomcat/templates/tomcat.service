@@ -1,0 +1,22 @@
+# Systemd unit file for default tomcat
+# 
+# To create clones of this service:
+
+
+[Unit]
+Description=Tomcat instance {{tomcat_instance}}
+After=network.target
+
+[Service]
+Type=forking
+
+ExecStart={{tomcat_instance_dir}}/apache-tomcat-{{ tomcat_version }}/bin/startup.sh
+ExecStop={{tomcat_instance_dir}}/apache-tomcat-{{ tomcat_version }}/bin/catalina.sh stop
+#SuccessExitStatus=143
+User={{tomcat_owner}}
+Environment="JAVA_OPTS=-Djava.awt.headless=true {{tomcat_java_params}}"
+Environment="JAVA_HOME={{jdk_folder}}/jdk1.8.0_152"
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

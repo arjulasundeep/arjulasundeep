@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jenkinspv
+  labels:
+    type: jenkins-pv
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 1000Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+   server: NFSSERVER_ADDRESS
+   path: "/"
+   readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkinspvc
+  namespace: jenkins
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1000Gi
+  volumeName: jenkinspv 

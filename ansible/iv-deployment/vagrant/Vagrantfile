@@ -1,0 +1,115 @@
+# ----------------------------------------------------
+# Vagrant File - Lab Environment
+#
+# mailto:rdavis@simeiosolutions.com
+#
+#
+# PREREQUISITES:
+# =============
+# -- This requires the vagrant-hostmanager plugin:
+# Run on HOST machine:
+# "vagrant plugin install vagrant-hostmanager"
+# Details: https://github.com/smdahlen/vagrant-hostmanager
+#
+# ----------------------------------------------------
+
+require 'yaml'
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+
+# ----------------------------------------------------
+# List of Nodes to build in Yaml format.
+# ----------------------------------------------------
+# Using CentOS Linux 7.4
+# Obtain the box from
+# http://cloud.terry.im/vagrant/oraclelinux-7-x86_64.box
+# Using the following command
+# vagrant box add oraclelinux7 http://cloud.terry.im/vagrant/oraclelinux-7-x86_64.box
+
+servers = YAML.load("
+---
+
+# Note
+# You may not want all the machines so comment out the machines
+# that you don't require
+
+
+# The following machines setup the GitLab environment
+- name: iv.simeio.net
+  hostname: iv.simeio.net
+  aliases: 
+  - 
+  box: bento/centos-7.4
+  ip: 192.168.4.228
+  ram: 8192
+  cpus: 2
+  # Turn on gui during install
+  gui: false
+
+
+
+")
+
+
+
+# ----------------------------------------------------
+# Configure VMs
+# ----------------------------------------------------
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  # The following configures the Host Manager
+  # this adds entries into the local /etc/hosts file of the host
+  
+  config.hostmanager.enabled = true
+  config.hostmanager.manage_host = true
+  config.hostmanager.manage_guest = true
+  config.hostmanager.ignore_private_ip = false
+  config.hostmanager.include_offline = true
+
+
+
+  servers.each do |server|
+    config.vm.define server["name"] do |srv|
+      srv.vm.box = server["box"]
+      srv.vm.box_check_update = true
+      srv.vm.network "private_network", ip: server["ip"]
+      srv.vm.hostname = server["hostname"]
+      srv.hostmanager.aliases = server["aliases"]
+      srv.vm.provider "virtualbox" do |vb|
+        vb.customize ["modifyvm", :id, "--groups", "/kubernetes-playground"]
+        vb.gui = server["gui"]
+        vb.name = server["name"]
+        vb.memory = server["ram"]
+        vb.cpus = server["cpus"]
+                # The following line is a fix for Centos 7.3 box
+                #vb.customize ["modifyvm", :id, "--cableconnected1", "on" ]
+      end
+
+      # Port Forwarding
+      if defined?(server["ports"]) && (server["ports"] != nil)
+        server["ports"].each do |ports|
+          srv.vm.network "forwarded_port", guest: ports["guest"], host: ports["host"]
+        end
+      end
+      print "Adding the following groups to ansible on "
+      print server["hostname"]
+      print ": "
+      print server["groups"]
+      print "\n"
+      if defined?(server["groups"]) && (server["groups"] != nil)
+        ansible_tags = ansible_tags + server["groups"]
+        server["groups"].each do |groups|
+          tempArray = Array.new([server["hostname"]])
+          if ansible_groups.has_key?(groups)
+            ansible_groups.merge!(groups => ansible_groups[groups]+tempArray)
+          else
+            ansible_groups.merge!(groups => tempArray)
+          end
+        end
+      end
+    end
+  end
+end
+

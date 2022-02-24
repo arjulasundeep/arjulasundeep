@@ -1,0 +1,29 @@
+# schema variables
+DB_name=simeiodb
+# this is value of db instance in AWS
+DB_user=simeio
+DB_password=Simeio!123
+DB_schema=simeio_io
+DB_schema_audit=simeio_audit
+DB_port=3306
+
+#rds variables
+DB_region=us-east-2
+DB_size=20
+DB_type=db.t2.micro
+DB_engine=MySQL
+DB_subnet=default-vpc-0baa71ec24a805e21
+DB_version=8.0.23
+DB_vpc_security_groups=sg-06ad760350a990670
+DB_zone=us-east-2a
+#zone should be under same region
+
+#DNS variables
+DNS_zone=pme-a.simeio.io
+DNS_host_id=Z06926641D46MQNZC8CZN
+DNS_record=['grafana.pme-a.simeio.io', 'conjur.pme-a.simeio.io']
+# pattern for multiple records  ['abc.simeio.io', 'xyz.simeio.io', ...]
+DNS_type=CNAME
+DNS_value=af2cee6df645f4d6d9b19c59c5e353dd-20c93785f1313bae.elb.us-east-2.amazonaws.com
+
+ansible_host=localhost

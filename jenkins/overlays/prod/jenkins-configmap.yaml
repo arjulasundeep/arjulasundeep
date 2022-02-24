@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-configmap
+  namespace: jenkins
+data:
+  JENKINS_URL: https://jenkins.simeio.io 

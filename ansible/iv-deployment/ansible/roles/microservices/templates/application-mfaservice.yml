@@ -1,0 +1,133 @@
+server:
+    port: 8764
+spring:
+    application:
+        name: mfa
+    jackson:
+        serialization:
+            indent-output: true
+
+feign:
+    client:
+        config:
+            default:
+                connect-timeout: 240000000
+                read-timeout: 240000000
+    hystrix:
+        enabled: true
+
+
+hystrix:
+  command:
+    AuthClient#getAuthorizedUser(String):
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 160000000
+
+    default:
+      coreSize: 20
+      maximumSize: 500
+      allowMaximumSizeToDivergeFromCoreSize: true
+      maxQueueSize: 50000
+      queueSizeRejectionThreshold: 50000
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 160000000
+
+
+logging:
+    level:
+        root: INFO
+
+management:
+    endpoint:
+        shutdown:
+            enabled: true
+            sensitive: false
+    endpoints:
+        web:
+            exposure:
+                include: '*'
+
+io:
+    mfa:
+        auth:
+            api:
+                url: {{ mfa_auth_url }}
+            notification:
+                config: {{ mfa_notificationconfig }}
+            request:
+                expiry: 600000
+                max:
+                    attempts: 5
+        config:
+            api:
+                url: {{ mfa_config_url }}
+        current:
+            environment: Local
+        security:
+            rsa:
+                confidence:
+                    status: {{ mfa_confidence }}
+                key:
+                    private: MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAJ/KyTgUvReUm8Rim6k9WeKh1qOGkGsoR561B38n1MFDUZmBQri+xwap4agK5UNg5/bxODn//INQyLVqxOnsBsYnUr3R5vAvAHBtiUxtBEkUE5KcBTCkJQzCT7D9nbkLHiwFIXdu6e/8ye+VxLkiDGqzgwoIcJdpHQ1jw4VLc6p1AgMBAAECgYAN5TF4Sf1jho3BFx4YKnidh5tFnxcB6n/H4lAjk5AhujvnUGE/9X8TKkSwOzpSkKO7SqCsEoGf3a+GbyFughLYlpS0LTw3Q0qKE/C5pDV70oTLSDehDp3S8VHCY68O2hG+Z7sCfUgomWUdOaI0Q+epxQU+wxXESdDPWB69+3noRQJBAPSUUL7KWbagIJKl6fdh25XcCo9O9k9/6MNdnMYDCY9RzxZcPSuurYC8R5+NFW/+ab2NrjvIEyKPHq6Q0VTrR6sCQQCnQO4WjYojqmnjHhGyLmXEQ8I4g1IsFmd1o1jV1n69T1+ySgvv1J9ax8cDUJMddkcvaSCrcEKH/6nCLRVXEjZfAkAIIcJJharT8qECnzeXPQ6y/dzwBN0VqZgQntUulD1GIZ80DB8Qi79DD3+GI4e58IiNf99yJ2XTeVS40yHSo/v/AkA+tC8OsX3KpUcRaOKFhLOOg0C7YzBZawTaq6TQdpwJaUqdUvlqrrIXnLJV4c1lzEQf2C/xViL7TbRdIf3QKPnNAkAW1g1Nr4M53l+VP7bNiV4pdHKVUUaJXxtlVu4dYGR7AWOxT/BHenuSXeykUoKapOtkTDQE5wrtJaRK5VXuoUd5
+                    public: MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCfysk4FL0XlJvEYpupPVniodajhpBrKEeetQd/J9TBQ1GZgUK4vscGqeGoCuVDYOf28Tg5//yDUMi1asTp7AbGJ1K90ebwLwBwbYlMbQRJFBOSnAUwpCUMwk+w/Z25Cx4sBSF3bunv/MnvlcS5Igxqs4MKCHCXaR0NY8OFS3OqdQIDAQAB
+        issuer: {{ mfa_issuer }}
+        otp:
+            pwd_length: 6
+            add_checksum_digit: false
+            enable_same_window_check: true
+            trunc_off_set: 16
+            hotp_win_size: 60
+            totp_time_step_interval: 30
+            totp_steps_in_window: 3
+            # -- values can be HmacSHA1, HmacSHA256, HmacSHA512 (hashing algorithm)
+            totp_HmacAlg: HmacSHA1
+            max_allowed_clock_drift: 5
+        qr_renderer_url: https://www.qr-code-generator.com/?go=https://my-redirection-page.com
+        push:
+            callbackUrl: {{ mfa_pushcallback_url }}
+        backupcode:
+            count: 10
+            length: 6
+
+    service:
+        ping:
+            baseurl: {{ mfa_ping_url }}
+            path:
+                user: {{ mfa_ping_userpath }}
+            serviceaccount:
+                basic:
+                    header: {{ mfa_ping_header }}
+
+iv:
+    thirdparty:
+        service:
+            firebase: https://fcm.googleapis.com/fcm/send
+            firebase.key: {{ mfa_firebase_key }}
+    url: {{ mfa_iv_url }}
+
+eureka:
+    client:
+        fetchRegistry: true
+
+ribbon:
+    eureka:
+        enabled: false
+    eager-load:
+        enabled: true
+        clients: database
+
+database:
+    ribbon:
+        listOfServers: localhost:8763
+
+auth-validator:
+    ribbon:
+        listOfServers: localhost:8080
+
+auditing:
+    ribbon:
+        listOfServers: localhost:8762

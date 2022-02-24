@@ -1,0 +1,14 @@
+---
+#tasks file for mfa
+- name: Copy mfa service file
+  template:
+    src: mfa.service
+    dest: /etc/systemd/system/mfa.service
+  when: ansible_service_mgr == "systemd"
+  
+- name: Start mfa
+  service:
+    daemon_reload: yes
+    name: mfa
+    state: started
+  when: ansible_service_mgr == "systemd"

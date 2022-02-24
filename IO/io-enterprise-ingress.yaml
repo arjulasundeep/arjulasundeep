@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: io-enterprise
+  namespace: ${IO_ENTERPRISE_NAMESPACE}
+  labels:
+    app: io-enterprise
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "web-static-ip"
+    ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    kubernetes.io/ingress.class: nginx
+    #    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    #    nginx.ingress.kubernetes.io/app-root: /sioui/app/index.html
+    nginx.ingress.kubernetes.io/enable-access-log: "true"
+    nginx.org/server-snippet: "proxy_ssl_verify off;"
+spec:
+  #  ingressClassName: nginx
+  #  tls:
+  #    - hosts:
+  #      - io.simeio.net
+  #      secretName: io-secret
+  rules:
+    - host: io-enterprise.pme-a.simeio.io
+      http:
+        paths:
+          - path:
+            #      - path: /sioui(.*)
+            #        pathType: Prefix
+            backend:
+              serviceName: io-enterprise
+              servicePort: 8080

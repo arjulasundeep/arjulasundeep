@@ -1,0 +1,14 @@
+---
+#tasks file for audit
+- name: Copy audit service file
+  template:
+    src: audit.service
+    dest: /etc/systemd/system/audit.service
+  when: ansible_service_mgr == "systemd"
+  
+- name: Start audit
+  service:
+    daemon_reload: yes
+    name: audit
+    state: started
+  when: ansible_service_mgr == "systemd"

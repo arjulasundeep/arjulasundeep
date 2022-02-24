@@ -1,0 +1,15 @@
+{{ io_app_host_staging.value }}
+ 
+[web]
+{{ io_app_host_staging.value }}
+
+
+[hazelcast]
+{{ io_app_host_staging.value }}
+
+# All Servers
+
+
+[base:children]
+web
+hazelcast

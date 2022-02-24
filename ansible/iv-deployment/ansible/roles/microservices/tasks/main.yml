@@ -1,0 +1,83 @@
+---
+# tasks file for microservices
+- name: creating multiple directories
+  file:
+    path: /home/ivuser/{{item.0}}/{{item.1}}
+    state: directory
+  with_nested:
+    - [microservices]
+    - ['conf-ms','jars','logs','bin']
+
+- name: copying files
+  template:
+    src: "{{ item }}"
+    dest: /home/ivuser/microservices/conf-ms
+  with_items:
+    - application-discovery.properties
+    - application-database.properties
+    - application-auditing.properties
+    - application-mfaservice.yml
+    - discovery-log4j2-spring.xml
+    - mfa-log4j2-spring.xml
+    - database-log4j2-spring.xml
+    - auditing-log4j2-spring.xml
+
+- name: adding files
+  copy:
+    src: "{{ item.src }}"
+    dest: /home/ivuser/microservices/{{ item.dest }}
+  with_items:
+    - { src: 'mfaservice-0.1.jar', dest: 'jars' }
+    - { src: 'database-0.1.jar', dest: 'jars' }
+    - { src: 'discovery-0.1.jar', dest: 'jars' }
+    - { src: 'auditing-0.1.jar', dest: 'jars' }
+    - { src: 'audit.sh', dest: 'bin' }
+    - { src: 'discovery.sh', dest: 'bin' }
+    - { src: 'database.sh', dest: 'bin' }
+    - { src: 'mfa.sh', dest: 'bin' }
+    - { src: 'run.sh', dest: 'bin' }
+    
+- name: Adding the path in the bashrc files
+  lineinfile:
+    dest: /root/.bashrc
+    line: "export SIOS_HOME=/home/ivuser/microservices"
+    insertafter: 'EOF'
+    state: present
+
+- name: Source the bashrc file
+  shell: source /root/.bashrc
+
+- name: Add ivuser group
+  group:
+    name: ivuser
+    state: present
+
+- name: Add "ivuser" user
+  user:
+    name: ivuser
+    group: ivuser
+    home: /home/ivuser/microservices
+    createhome: yes
+    system: yes
+    state: present
+  ignore_errors: yes
+
+- name: permissions
+  file:
+    path: /home/ivuser/microservices
+    owner: ivuser
+    group: ivuser
+    mode: 0755
+    state: directory
+    recurse: yes
+    
+- name: shell script
+  become: yes
+  become_user: ivuser
+  shell: /home/ivuser/microservices/bin/run.sh
+
+#- include_tasks: "discovery.yml"
+#- include_tasks: "database.yml"
+#- include_tasks: "mfa.yml"
+#- include_tasks: "audit.yml"
+

@@ -1,0 +1,17 @@
+---
+- name: patch RRset
+  oci_rrset:
+    name: dns-pme-a.simeio.io
+    domain: dns-pme-a.simeio.io
+    rtype: A
+    state: present
+    wait: yes
+    zone_id: "ocid1.dns-zone.oc1..e68df3993ffc47fb9439572dba4d78a9"
+      update_items: [{
+                       domain: dns-pme-a.simeio.io
+                       is_protected: true
+                       rdata: 5.5.5.6
+                       rtype: A
+                       ttl: 30
+                       operation: ADD
+      }]

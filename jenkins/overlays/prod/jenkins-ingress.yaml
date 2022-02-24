@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: jenkins
+  namespace: jenkins
+  labels:
+    app: jenkins
+spec:
+  rules:
+   - host: jenkins.simeio.io
+     http:
+      paths:
+      - path: /
+        backend:
+          serviceName: jenkins
+          servicePort: 8080
+  tls:
+    - hosts:
+      - jenkins.simeio.io 
+      secretName: simeioio

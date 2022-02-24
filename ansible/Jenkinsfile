@@ -1,0 +1,138 @@
+pipeline{
+    
+    environment {
+        imagename = "docker/io-audit-service"
+        dockergitrepo = 'io-audit-service-docker'
+        registryCredential = 'jenkins-jfrog'
+        dockerImage = ''
+    }
+    
+    agent { 
+      kubernetes {
+            defaultContainer 'docker'
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    buildType: docker
+spec:
+  containers:
+  - name: docker
+    image: simeio.jfrog.io/docker/docker:20.10.10-dind
+    imagePullPolicy: Always
+    command:
+    - cat
+    tty: true
+    volumeMounts:
+    - name: docker-sock-volume
+      mountPath: /var/run/docker.sock
+  volumes:
+  - name: docker-sock-volume
+    hostPath:
+      path: /var/run/docker.sock
+  imagePullSecrets:
+    - name: regcred
+"""
+        }
+    }
+    triggers {
+                cron('H 15 * * *')
+        }
+    
+    stages {
+        stage('Build Repository Checkout') {
+            steps{
+                // Clean the workspace
+                cleanWs()
+                
+                // Check out the build repository
+                checkout([$class: 'GitSCM', branches: [[name: '*/develop'],[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', url: 'https://bitbucket.org/simeioio/' + dockergitrepo + '.git']]])
+            }
+        }
+        
+        stage('Get Build Version - Develop') {
+                         when {
+                             branch 'develop'
+                         }
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/development']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'binaryrepo'], [$class: 'CleanBeforeCheckout'], [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'pom.xml']]]], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', url: 'https://bitbucket.org/simeioio/io-audit-service.git']]])
+            }
+        }
+
+        stage('Get Build Version - Master') {
+                    when {
+                             branch 'master'
+                         }
+                    steps {
+
+                        // Check out the binary repo
+                        checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'binaryrepo'], [$class: 'CleanBeforeCheckout'], [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'pom.xml']]]], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', url: 'https://bitbucket.org/simeioio/io-audit-service.git']]])
+                    }
+                }
+        
+        stage ('Set Build Version Environment Variable') {
+            
+            steps {
+                // Set the build version environment variable
+                script{
+	   //           NEED TO UPDATE THE FOLLOWING TO GREP THE POM.XML PROPERLY TO OBTAIN THE VERSION, THEN IT SHOULD BE ACTIVATED
+                      env.BLDVER = sh(script: 'cat binaryrepo/pom.xml | grep version | grep -o -E [0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\-SNAPSHOT? | sort -u' , returnStdout: true).trim()
+
+                }
+                // Print the determine build version
+                sh 'echo Building version $BLDVER'
+            }
+       }
+        
+        stage('Download Artifacts') {
+             steps {
+             // Get the Artifact from Artifactory
+                rtServer (
+                    id: 'ARTIFACTORY_SERVER',
+                    url: 'https://simeio.jfrog.io/artifactory',
+                    credentialsId: 'jenkins-jfrog'
+                )
+             
+             // Use the following pattern for Maven-generated artifacts
+                rtDownload (
+                   serverId: 'ARTIFACTORY_SERVER',
+                    spec: ''' {
+                            "files": [
+                                {
+                                    "pattern": "repo/com/simeio/io/io-audit-service/$BLDVER/*.jar",
+                                    "sortBy": ["created"],
+                                    "sortOrder": "desc",
+                                    "limit": 1,
+                                    "target": "binaryrepo/",
+                                    "flat": "true"
+                                }
+                            ]
+                        } '''
+                )
+             }
+        }
+
+        stage ("Building Docker Image") {
+            steps {
+                script {
+                    sh ("cp binaryrepo/io-audit-service-*.jar io-audit-service.jar")
+                    sh ("docker build --network=host -t " + imagename + " .")
+                    dockerImage = docker.build imagename
+                }
+            }
+        }
+            
+        stage ("Push Docker Image to Registry") {
+            steps {
+                script{
+                    docker.withRegistry('http://simeio.jfrog.io/artifactory', registryCredential) {
+                    dockerImage.push('$BLDVER')
+                    dockerImage.push('latest')
+                    }
+                }
+            }
+        }
+    }
+}
+

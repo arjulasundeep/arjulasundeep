@@ -1,0 +1,231 @@
+credentials:
+  system:
+    domainCredentials:
+    - credentials:
+      - usernamePassword:
+          description: "jenkins service account in k8 cluster"
+          id: ${JENKINS_SERVICE_ACCOUNT_K8}
+          password: ${JENKINS_SERVICE_ACCOUNT_K8_PASSWORD}
+          scope: GLOBAL
+          username: "jenkins"
+          usernameSecret: true
+      - fileSystemServiceAccountCredential:
+          id: ${JENKINS_FS_ACCOUNT_CREDENTIAL}
+          scope: GLOBAL
+      - usernamePassword:
+          description: "Jenkins Service Account for Artifactory"
+          id: "jenkins-jfrog"
+          password: ${JENKINS_SERVICE_ACCOUNT_JFROG_PASSWORD}"
+          scope: GLOBAL
+          username: ${JENKINS_SERVICE_ACCOUNT_JFROG}
+          usernameSecret: true
+      - usernamePassword:
+          description: "Bitbucket Service Account Credentials for Jenkins"
+          id: "bitbucket-jenkins"
+          password: ${JENKINS_SERVICE_ACCOUNT_BITBUCKET_PASSWORD}
+          scope: GLOBAL
+          username: ${JENKINS_SERVICE_ACCOUNT_BITBUCKET}
+          usernameSecret: true
+jenkins:
+  agentProtocols:
+  - "JNLP4-connect"
+  - "Ping"
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+       - id: ${JENKINS_ADMIN_ID}
+         password: ${JENKINS_ADMIN_PASSWORD}
+  authorizationStrategy:
+    globalMatrix:
+      permissions:
+        - "Overall/Administer:${JENKINS_ADMIN_ID}"
+        - "Overall/Read:authenticated"
+  clouds:
+  - kubernetes:
+      containerCap: 10
+      containerCapStr: "10"
+      jenkinsTunnel: "jenkins-jnlp:50000"
+      jenkinsUrl: "http://jenkins:8080"
+      name: "kubernetes"
+      namespace: "jenkins"
+      useJenkinsProxy: true
+  crumbIssuer:
+    standard:
+      excludeClientIPFromCrumb: false
+  disableRememberMe: false
+  disabledAdministrativeMonitors:
+  - "hudson.diagnosis.TooManyJobsButNoView"
+  - "jenkins.security.QueueItemAuthenticatorMonitor"
+  - "jenkins.diagnostics.ControllerExecutorsAgents"
+  globalNodeProperties:
+  - toolLocation:
+      locations:
+      - home: "git"
+        key: "hudson.plugins.git.GitTool$DescriptorImpl@default"
+  labelAtoms:
+  - name: "dockerBuild"
+  - name: "master"
+  markupFormatter: "plainText"
+  mode: NORMAL
+  myViewsTabBar: "standard"
+  numExecutors: 2
+  primaryView:
+    all:
+      name: "all"
+  projectNamingStrategy: "standard"
+  quietPeriod: 5
+  remotingSecurity:
+    enabled: true
+  scmCheckoutRetryCount: 0
+  slaveAgentPort: 50000
+  updateCenter:
+    sites:
+    - id: "default"
+      url: "https://updates.jenkins.io/update-center.json"
+  views:
+  - all:
+      name: "all"
+  viewsTabBar: "standard"
+security:
+  apiToken:
+    creationOfLegacyTokenEnabled: false
+    tokenGenerationOnCreationEnabled: false
+    usageStatisticsEnabled: true
+  globalJobDslSecurityConfiguration:
+    useScriptSecurity: false 
+  sSHD:
+    port: -1
+unclassified:
+  artifactoryBuilder:
+    jfrogInstances:
+    - artifactoryUrl: "https://simeio.jfrog.io/artifactory"
+      bypassProxy: false
+      connectionRetry: 3
+      deployerCredentialsConfig:
+        credentialsId: ${JENKINS_SERVICE_ACCOUNT_JFROG}
+        overridingCredentials: false
+        password: ${JENKINS_SERVICE_ACCOUNT_JFROG_PASSWORD}
+        username: "****"
+      deploymentThreads: 3
+      distributionUrl: "https://simeio.jfrog.io/artifactory/distribution"
+      instanceId: "simeio-artifactory"
+      platformUrl: "https://simeio.jfrog.io/artifactory"
+      timeout: 300
+    jfrogPipelinesServer:
+      bypassProxy: false
+      connectionRetries: 3
+      credentialsConfig:
+        ignoreCredentialPluginDisabled: true
+        overridingCredentials: false
+        password: "{AQAAABAAAAAQU1a/LHXCrLf7/P2enLg9ngheRnAY+zVri1F6k9VVcN0=}"
+        username: "****"
+      timeout: 300
+    useCredentialsPlugin: true
+  buildDiscarders:
+    configuredBuildDiscarders:
+    - "jobBuildDiscarder"
+  email-ext:
+    adminRequiredForTemplateTesting: false
+    allowUnregisteredEnabled: false
+    charset: "UTF-8"
+    debugMode: false
+    defaultBody: |-
+      $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS:
+
+      Check console output at $BUILD_URL to view the results.
+    defaultContentType: "text/plain"
+    defaultSubject: "$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!"
+    defaultTriggerIds:
+    - "hudson.plugins.emailext.plugins.trigger.FailureTrigger"
+    - "hudson.plugins.emailext.plugins.trigger.StatusChangedTrigger"
+    - "hudson.plugins.emailext.plugins.trigger.SuccessTrigger"
+    mailAccount:
+      smtpHost: ${JENKINS_SMTP_HOSTNAME}
+      smtpPort: ${JENKINS_SMTP_PORT}
+      useSsl: false
+      useTls: true
+      smtpUsername: ${JENKINS_SMTP_USERNAME}
+      smtpPassword: ${JENKINS_SMTP_PASSWORD}
+    maxAttachmentSize: -1
+    maxAttachmentSizeMb: -1
+    precedenceBulk: false
+    watchingEnabled: false
+  fingerprints:
+    fingerprintCleanupDisabled: false
+    storage: "file"
+  gitSCM:
+    addGitTagAction: false
+    allowSecondFetch: false
+    createAccountBasedOnEmail: false
+    disableGitToolChooser: false
+    hideCredentials: false
+    showEntireCommitSummaryInChanges: false
+    useExistingAccountWithSameEmail: false
+  ivyBuildTrigger:
+    extendedVersionMatching: false
+  junitTestResultStorage:
+    storage: "file"
+  location:
+    adminAddress: "address not configured yet <nobody@nowhere>"
+    url: "${JENKINS_URL}"
+  mailer:
+    authentication:
+      password: ${JENKINS_SMTP_PASSWORD}
+      username: ${JENKINS_SMTP_USERNAME}
+    charset: "UTF-8"
+    defaultSuffix: ${JENKINS_SMTP_DEFAULTSUFFIX}
+    replyToAddress: ${JENKINS_SMTP_REPLYTOADDRESS}
+    smtpHost: ${JENKINS_SMTP_HOSTNAME}
+    smtpPort: ${JENKINS_SMTP_PORT}
+    useSsl: false
+    useTls: true
+  mavenModuleSet:
+    localRepository: "default"
+  pollSCM:
+    pollingThreadCount: 10
+tool:
+  git:
+    installations:
+    - home: "git"
+      name: "default"
+  maven:
+    installations:
+    - name: "maven"
+      properties:
+      - installSource:
+          installers:
+          - maven:
+              id: "3.6.3"
+  mavenGlobalConfig:
+    globalSettingsProvider: "standard"
+    settingsProvider: "standard"
+  nodejs:
+    installations:
+    - name: "node14.16.0"
+      properties:
+      - installSource:
+          installers:
+          - nodeJSInstaller:
+              id: "14.16.0"
+              npmPackages: "@angular/cli@9.1.11"
+              npmPackagesRefreshHours: 72
+jobs:
+  - script: >
+      job('Job_DSL_Seed') {
+        label ('master')
+        scm {
+          git {
+            remote {
+              url ("${JENKINS_DEPLOYMENT_REPO_URL}")
+              credentials("bitbucket-jenkins")
+            }
+            branch("*/develop")
+          }
+        }
+        steps {
+          jobDsl {
+            targets 'jenkins/jobs/*.groovy\njenkins/jobs/**/*.groovy'
+          }
+        }
+      }

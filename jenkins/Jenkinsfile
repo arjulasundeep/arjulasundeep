@@ -1,0 +1,116 @@
+def gitrepo = 'io-audit-service'
+pipeline {
+
+    environment {
+        gitrepo = 'io-audit-service'
+    }
+
+    agent {
+        kubernetes {
+            defaultContainer 'maven'
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: maven
+    image: simeio.jfrog.io/docker/maven:3.8.1-openjdk-8
+    command:
+    - sleep
+    args:
+    - infinity
+    tty: true
+    volumeMounts:
+    - mountPath: /root/.m2
+      name: maven-local-repo
+  volumes:
+    - name: maven-local-repo
+      hostPath:
+          path: /root/.m2
+  imagePullSecrets:
+    - name: regcred
+'''
+        }
+    }
+    triggers{
+        bitbucketPush overrideUrl: 'https://bitbucket.org/simeioio/' + gitrepo + '.git'
+    }
+	
+    stages {
+        stage ('Artifactory configuration') {
+            steps {
+                rtServer (
+                    id: "ARTIFACTORY_SERVER",
+                    url: 'https://simeio.jfrog.io/artifactory',
+                    credentialsId: 'jenkins-jfrog'
+                )
+
+                rtMavenDeployer (
+                    id: "MAVEN_DEPLOYER",
+                    serverId: "ARTIFACTORY_SERVER",
+                    releaseRepo: 'libs-releases-local',
+                    snapshotRepo: 'libs-snapshots-local'
+                )
+
+                rtMavenResolver (
+                    id: "MAVEN_RESOLVER",
+                    serverId: "ARTIFACTORY_SERVER",
+                    releaseRepo: 'repo',
+                    snapshotRepo: 'repo'
+                )
+		rtBuildInfo()
+            }
+        }
+
+        stage('Build Repository Checkout') {
+            steps{
+                // Clean the workspace
+                //cleanWs()
+
+                // Check out the build repository
+                checkout([$class: 'GitSCM', branches: [[name: '*/development'], [name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', url: 'https://bitbucket.org/simeioio/' + gitrepo + '.git']]])
+            }
+        }
+
+        stage('Build Artifact') {
+            environment {
+                // Must define environmental variable for maven here for container coordination
+                MAVEN_HOME = '/usr/share/maven'
+				JAVA_HOME = '/usr/local/openjdk-8'
+                PATH = '$JAVA_HOME/bin:$PATH'
+            }
+            steps {
+               rtMavenRun (
+                   pom: 'pom.xml',
+                   goals: 'clean install -DskipTests',
+                   deployerId: "MAVEN_DEPLOYER",
+                   resolverId: "MAVEN_RESOLVER"
+               )
+	       rtPublishBuildInfo(
+		   serverId: "ARTIFACTORY_SERVER"
+               )
+            }
+        }
+        stage('invoke develop') {
+             when {
+                  branch 'development'
+             }
+
+                  steps {
+                         build job: 'io-audit-service-docker/develop',
+                         wait: false
+                  }
+        }
+        stage('invoke master') {
+             when {
+                      branch 'master'
+             }
+
+                  steps {
+                       build job: 'io-audit-service-docker/master',
+                       wait: false
+                  }
+        }
+    }
+}
+

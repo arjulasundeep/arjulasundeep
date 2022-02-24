@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-configmap
+  namespace: jenkins
+data:
+  JENKINS_URL: http://jenkins.replaceme.com
+  JENKINS_DEPLOYMENT_REPO_URL: https://bitbucket.org/simeioio/deployments-replacewithreponame.git
+  JENKINS_SMTP_HOSTNAME: replaceme
+  JENKINS_SMTP_PORT: replaceme
+  JENKINS_SMTP_DEFAULTSUFFIX: replaceme
+  JENKINS_SMTP_REPLYTOADDRESS: replaceme

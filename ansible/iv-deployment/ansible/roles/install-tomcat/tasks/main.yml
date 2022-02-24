@@ -1,0 +1,73 @@
+---
+# Create tomcat instance. Variables to pass in to this role (these can also be global defaults)
+
+- name: Stop the Service
+  service: name={{ tomcat_servicename }}.service enabled=no
+  ignore_errors: yes
+
+- name: Make sure that the software folder exists on the server
+  file:
+    path: "{{software_remote_folder}}"
+    state: directory
+    owner: "{{tomcat_owner}}"
+
+
+- name: remove any old tomcat instance
+  file: path="{{tomcat_instance_dir}}/apache-tomcat-{{ tomcat_version }}" state="absent"
+
+- name: Make sure that the tomcat folder exists on the server
+  file:
+    path: "{{tomcat_instance_dir}}"
+    state: directory
+    owner: "{{tomcat_owner}}"
+
+- name: Check for downloaded tomcat - so we can skip download
+  stat: path="{{software_remote_folder}}/{{tomcat_filename}}"
+  register: tomcat_present
+
+- name: Copy local copy of tomcat (if available)
+  copy: src="{{software_local_folder}}/{{tomcat_filename}}" dest={{software_remote_folder}}
+  ignore_errors: yes
+  when: tomcat_present.stat.exists == false
+
+- name: Expand tomcat
+  unarchive:
+    src: "{{software_remote_folder}}/{{tomcat_filename}}"
+    dest: "{{tomcat_instance_dir}}"
+    owner: "{{tomcat_owner}}"
+    remote_src: yes 
+
+
+
+- name: Configure Tomcat server
+  template: src=server.xml dest="{{tomcat_instance_dir}}/apache-tomcat-{{ tomcat_version }}/conf/"
+
+- name: Configure Tomcat users
+  template: src=tomcat-users.xml dest={{ tomcat_instance_dir }}/apache-tomcat-{{ tomcat_version }}/conf/
+
+
+- name: Generate Self-Signed certificate
+  command: "{{openidm_keytool_location}} -genkey -keyalg RSA -alias {{ ansible_nodename }} -keystore  {{tomcat_keystore_location}} -storepass {{ tomcat_keystore_pswd }} -validity {{ cert_tomcat_validity }} -keysize {{ keystore_tomcat_keysize }} -dname CN={{ansible_nodename}},OU=gnb,L=Fredericton,ST=NB,C=CA -keypass {{ tomcat_keystore_pswd }}"
+
+
+
+- name: Install Tomcat startup script
+#  There is a different service manager with CentOS 6.7 than with CentOS 7.0
+  template: src="tomcat.service"  dest="/etc/systemd/system/{{tomcat_servicename}}.service"
+
+- name: Change ownership of Tomcat installation
+  file: path={{ tomcat_instance_dir }} owner={{ tomcat_owner }} state=directory recurse=yes
+
+
+- name: Harden Tomcat by removing default WebApps not needed
+  file: path={{ tomcat_instance_dir }}/apache-tomcat-{{ tomcat_version }}/webapps/{{item.file}} state=absent
+  with_items:
+    - { file: docs}
+    - { file: examples}
+    - { file: host-manager}
+    - { file: manager}
+
+
+# Enable but dont start since we probably have to stop to deploy openam
+- name: Install the Service
+  service: name={{ tomcat_servicename }}.service enabled=yes

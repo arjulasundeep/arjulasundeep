@@ -1,0 +1,50 @@
+---
+- name: Running SQL scripts in DB
+  template:
+    src: "{{ item }}"
+    dest: /opt
+  with_items:
+    - DDL.sql
+    - DML.sql
+    - mysql_schema_init.sql
+
+- name: Install MySQL
+  action: yum name={{ item }}
+  with_items:
+    - MySQL-python
+    - mysql
+    
+- name: changing permissions
+  shell :
+    cmd : chmod -R 755 /opt/
+
+- name: delete old with same name if exists db
+  shell:
+    cmd: mysql -h {{ DB_host }} -P {{ DB_port }} -u {{ dbuser }} -p'{{ DB_password }}' -D {{ iv_schema }} -e "DROP DATABASE IF EXISTS {{ iv_schema }}"
+  ignore_errors: yes
+
+- name: create new schema
+  shell:
+    cmd: mysqladmin -h {{ DB_host }} -P {{ DB_port }} -u {{ dbuser }} -p'{{ DB_password }}' create {{ iv_schema }}
+    
+- name: delete old with same name if exists db
+  shell:
+    cmd: mysql -h {{ DB_host }} -P {{ DB_port }} -u {{ dbuser }} -p'{{ DB_password }}' -D {{ auditing_schema }} -e "DROP DATABASE IF EXISTS {{ auditing_schema }}"
+  ignore_errors: yes
+
+- name: create new schema
+  shell:
+    cmd: mysqladmin -h {{ DB_host }} -P {{ DB_port }} -u {{ dbuser }} -p'{{ DB_password }}' create {{ auditing_schema }}
+
+- name: running DDL.sql
+  shell:
+    cmd: mysql -h {{ DB_host }} -P {{ DB_port }} -u {{ dbuser }} -p'{{ DB_password }}' {{ iv_schema }} < /opt/DDL.sql
+
+- name: running DML.sql
+  shell:
+    cmd: mysql -h {{ DB_host }} -P {{ DB_port }} -u {{ dbuser }} -p'{{ DB_password }}' {{ iv_schema }} < /opt/DML.sql
+
+- name: running mysql_schema_init.sql
+  shell:
+    cmd: mysql -h {{ DB_host }} -P {{ DB_port }} -u {{ dbuser }} -p'{{ DB_password }}' {{ auditing_schema }} < /opt/mysql_schema_init.sql
+

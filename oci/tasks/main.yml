@@ -1,0 +1,43 @@
+---
+
+- name: Install OCI
+  pip:
+    name: 
+      - oci
+
+- name: Install OCI
+  pip:
+    name:
+      - python-oci-sdk
+      - python-oci-cli
+#    executable: pip3
+
+- name: Adding files
+  template:
+    src: oci_config
+    dest: /root/.oci/config
+
+- name: Adding files
+  template:
+    src: oci_api_key.pem
+    dest: /root/.oci/oci_api_key.pem
+
+- name: Adding files
+  template:
+    src: oci_api_key_public.pem
+    dest: /root/.oci/oci_api_key_public.pem
+
+- name: patch RRset
+  oci_rrset:
+     compartment_id: ocid1.tenancy.oc1..aaaaaaaagbwhchxfh6qbciwm4uhcksldtdx2bhmnmtsy5clvvneknawxlfia
+     domain: dns.pme-o.simeio.io
+     rtype: A
+     state: present
+     zone_id: ocid1.dns-zone.oc1..e68df3993ffc47fb9439572dba4d78a9
+     patch_items:
+       - domain: dns.pme-o.simeio.io
+         is_protected: true
+         rdata: 193.122.199.118
+         rtype: A
+         ttl: 300
+         operation: ADD
