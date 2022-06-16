@@ -47,13 +47,13 @@ spec:
                 cleanWs()
 
                 // Check out the build repository
-                checkout([$class: 'GitSCM', branches: [[name: '*/develop']], extensions: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', url: 'https://bitbucket.org/simeioio/' + dockergitrepo + '.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/develop']], extensions: [], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', url: 'https://bitbucket.org/TOMCAT/' + dockergitrepo + '.git']]])
             }
         }
         stage('Get Build Version - Develop') {
             steps {
                 //Check out the binary repo
-                checkout([$class: 'GitSCM', branches: [[name: '*/development']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'binaryrepo'], [$class: 'CleanBeforeCheckout'], [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'pom.xml']]]], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', url: 'https://bitbucket.org/simeioio/io-enterprise.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/development']], extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'binaryrepo'], [$class: 'CleanBeforeCheckout'], [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'pom.xml']]]], userRemoteConfigs: [[credentialsId: 'bitbucket-jenkins', url: 'https://bitbucket.org/TOMCAT/enterprise.git']]])
             }
         }
 
@@ -78,13 +78,13 @@ spec:
 
               //Use the following pattern for Maven-generated artifacts
                 //rtDownload (
-                   //serverId: 'simeio-artifactory',
+                   //serverId: 'TOMCAT-artifactory',
                     //spec: ''' {
                             //"files": [
                                 //{
-                                    //"pattern": "repo/com/simeio/sio/sio/$BLDVER/sio-$BLDVER-sio.zip"
+                                    //"pattern": "repo/com/TOMCAT/$BLDVER/$BLDVER.zip"
                                     //"flat": "true",
-			                        //"build":"io-enterprise/LATEST"
+			                        //"build":"enterprise/LATEST"
                                 //}
                             //]
                     //} '''
@@ -92,9 +92,9 @@ spec:
 
                 //Retrieve non-Maven SNAPSHOT artifacts via curl to ensure latest SNAPSHOT build is resolved. Need the -L option to follow any redirects
                 //withCredentials([usernamePassword(credentialsId: 'jenkins_jfrog', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    //sh 'curl -L -u $USERNAME:$PASSWORD -O https://simeio.jfrog.io/artifactory/libs-releases-local/com/simeio/sio/sio/$BLDVER/conf'
-                    //sh 'curl -L -u $USERNAME:$PASSWORD -O https://simeio.jfrog.io/artifactory/libs-releases-local/com/simeio/sio/sio/$BLDVER/sioserver.war'
-                    //sh 'curl -L -u $USERNAME:$PASSWORD -O https://simeio.jfrog.io/artifactory/libs-releases-local/com/simeio/sio/sio/$BLDVER/sioui.war'
+                    //sh 'curl -L -u $USERNAME:$PASSWORD -O https://TOMCAT.jfrog.io/artifactory/libs-releases-local/com/TOMCAT/$BLDVER/conf'
+                    //sh 'curl -L -u $USERNAME:$PASSWORD -O https://TOMCAT.jfrog.io/artifactory/libs-releases-local/com/TOMCAT/$BLDVER/TOMCAT.war'
+                    //sh 'curl -L -u $USERNAME:$PASSWORD -O https://TOMCAT.jfrog.io/artifactory/libs-releases-local/com/TOMCAT/$BLDVER/SUNDEEP.war'
                 //}
             //}
         //}
@@ -102,10 +102,10 @@ spec:
         //stage ('download dependencies for image') {
 		     //steps {
 			    //withCredentials([usernamePassword(credentialsId: 'bitbucket-jenkins', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    //sh 'curl -L -u $USERNAME:$PASSWORD -O https://simeio.jfrog.io/artifactory/docker-images-local/com/simeio/sio/sio/7.2.4/sio-7.2.4-sio.zip'
+                    //sh 'curl -L -u $USERNAME:$PASSWORD -O https://TOMCAT.jfrog.io/artifactory/docker-images-local/com/TOMCAT/7/7.zip'
 				//}
-				//sh 'ls sio-*.zip'
-				//sh 'unzip sio-7.2.4-sio.zip'
+				//sh 'ls TOMCAT-*.zip'
+				//sh 'unzip 7.zip'
 			 //}
         //}*/
         stage('Download Artifacts') {
@@ -113,7 +113,7 @@ spec:
                      // Get the Artifact from Artifactory
                         rtServer (
                             id: 'ARTIFACTORY_SERVER',
-                            url: 'https://simeio.jfrog.io/artifactory',
+                            url: 'https://TOMCAT.jfrog.io/artifactory',
                             credentialsId: 'jenkins-jfrog'
                         )
 
@@ -123,7 +123,7 @@ spec:
                             spec: ''' {
                                     "files": [
                                         {
-                                            "pattern": "repo/com/simeio/sio/sio/$BLDVER/sio-$BLDVER-sio.zip",
+                                            "pattern": "repo/com/TOMCAT/$BLDVER/$BLDVER.zip",
                                             "sortBy": ["created"],
                                             "sortOrder": "desc",
                                             "limit": 1,
@@ -139,7 +139,7 @@ spec:
                             spec: ''' {
                                     "files": [
                                         {
-                                            "pattern": "repo/com/simeio/sio/sioserver/$BLDVER/sioserver-$BLDVER.war",
+                                            "pattern": "repo/com/TOMCAT/$BLDVER/$BLDVER.war",
                                             "sortBy": ["created"],
                                             "sortOrder": "desc",
                                             "limit": 1,
@@ -154,7 +154,7 @@ spec:
                             spec: ''' {
                                     "files": [
                                         {
-                                            "pattern": "repo/com/simeio/sio/sioui/$BLDVER/sioui-$BLDVER.war",
+                                            "pattern": "repo/com/TOMCAT/$BLDVER/$BLDVER.war",
                                             "sortBy": ["created"],
                                             "sortOrder": "desc",
                                             "limit": 1,
@@ -171,12 +171,11 @@ spec:
                     steps {
 
                         script {
-                            sh ("cp binaryrepo/sioserver-*.war sioserver.war")
-                            sh ("cp binaryrepo/sioui-*.war sioui.war")
-                            sh ("cp binaryrepo/sio-$BLDVER-sio.zip .")
-                            sh ("unzip sio-$BLDVER-sio.zip")
+                            sh ("cp binaryrepo/TOMCAT-*.war TOMCAT.war")
+                            sh ("cp binaryrepo/SUNDEEP-*.war SUNDEEP.war")
+                            sh ("cp binaryrepo/$BLDVER.zip .")
+                            sh ("unzip $BLDVER.zip")
                             sh ("rm -rf conf/jdbc.properties")
-                            sh ("rm -rf conf/quartz.properties")
                             sh ("docker build --network=host -t " + imagename + " .")
                             dockerImage = docker.build imagename
                         }
@@ -186,7 +185,7 @@ spec:
                 stage ("Push Docker Image to Registry") {
                     steps {
                         script {
-                            docker.withRegistry('http://simeio.jfrog.io/artifactory', registryCredential) {
+                            docker.withRegistry('http://TOMCAT.jfrog.io/artifactory', registryCredential) {
                             dockerImage.push('$BLDVER')
                             dockerImage.push('latest')
                             }
