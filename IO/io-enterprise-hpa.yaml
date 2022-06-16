@@ -1,8 +1,8 @@
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: io-enterprise
-  namespace: ${IO_ENTERPRISE_NAMESPACE}
+  name: enterprise
+  namespace: ${ENTERPRISE_NAMESPACE}
 
 spec:
   maxReplicas: 4
@@ -10,5 +10,5 @@ spec:
   scaleTargetRef:
     apiVersion: extensions/v1beta1
     kind: Deployment
-    name: io-enterprise
+    name: enterprise
   targetCPUUtilizationPercentage: 70
