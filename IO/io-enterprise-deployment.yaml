@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: io-enterprise
-  namespace: ${IO_ENTERPRISE_NAMESPACE}
+  name: enterprise
+  namespace: ${ENTERPRISE_NAMESPACE}
   labels:
-    app: io-enterprise
+    app: enterprise
 spec:
   replicas: 1
   strategy:
@@ -15,15 +15,15 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: io-enterprise
+      app: enterprise
   template:
     metadata:
       labels:
-        app: io-enterprise
+        app: enterprise
     spec:
       containers:
-        - name: io-enterprise
-          image: simeio.jfrog.io/docker/io-enterprise-docker:${VERSIONTAG}
+        - name: enterprise
+          image: TOMCAT.jfrog.io/docker/enterprise-docker:${VERSIONTAG}
           imagePullPolicy: Always
           resources:
             limits:
@@ -35,10 +35,10 @@ spec:
           ports:
           - containerPort: 8080
           volumeMounts:
-          - name: ioenterprise
+          - name: enterprise
             mountPath: /opt/tomcat/SIO_HOME/conf/jdbc.properties
             subPath: jdbc.properties
-          - name: ioenterprise
+          - name: enterprise
             mountPath: /opt/tomcat/SIO_HOME/conf/quartz.properties
             subPath: quartz.properties
           - name: zoneinfo
@@ -50,15 +50,15 @@ spec:
             failureThreshold: 3
             successThreshold: 1
             httpGet:
-              path: /sioui/app/index.html
+              path: /SUNDEEP/app/index.html
               port: 8080
               scheme: HTTP
             periodSeconds: 10
             initialDelaySeconds: 35
       volumes:
-        - name: ioenterprise
+        - name: enterprise
           configMap:
-            name: ioenterprise
+            name: enterprise
             optional: true
         - name: zoneinfo
           hostPath:
@@ -70,14 +70,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: io-enterprise
+  name: enterprise
   labels:
-    app: io-enterprise
-  namespace: ${IO_ENTERPRISE_NAMESPACE}
+    app: enterprise
+  namespace: ${ENTERPRISE_NAMESPACE}
 spec:
   selector:
-    app: io-enterprise
+    app: enterprise
   type: NodePort
   ports:
-    - name: io-enterprise
+    - name: enterprise
       port: 8080
