@@ -33,7 +33,7 @@ spec:
         }
     }
     triggers{
-        bitbucketPush overrideUrl: 'https://bitbucket.org/simeioio/' + gitrepo + '.git'
+        bitbucketPush overrideUrl: 'https://bitbucket.org/auditio/' + gitrepo + '.git'
     }
 	
     stages {
