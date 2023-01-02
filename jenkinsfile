@@ -3,7 +3,8 @@ pipeline {
     stages {
         stage('cloud') {
             steps {
-                ansible-playbook oci.yml
+                ansible-playbook jenkins.yml 
+                #oci.yml
             }
         }
     }
